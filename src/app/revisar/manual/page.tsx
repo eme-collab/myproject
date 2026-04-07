@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { ui } from '@/lib/ui'
 import { createManualEntry } from './actions'
 
 function getErrorMessage(error?: string) {
@@ -35,9 +36,9 @@ export default async function RevisarManualPage({
   const today = new Date().toISOString().slice(0, 10)
 
   return (
-    <main className="min-h-screen p-8">
-      <div className="mx-auto max-w-3xl space-y-6">
-        <div className="rounded-2xl border p-6">
+    <main className={ui.page.shell}>
+      <div className={ui.page.containerNarrow}>
+        <div className={ui.card.base}>
           <Link href="/painel" className="text-sm underline">
             Voltar para o painel
           </Link>
@@ -58,7 +59,7 @@ export default async function RevisarManualPage({
           </div>
         )}
 
-        <div className="rounded-2xl border p-6">
+        <div className={ui.card.base}>
           <form action={createManualEntry} className="space-y-4">
             <div>
               <label
@@ -71,7 +72,7 @@ export default async function RevisarManualPage({
                 id="entry_type"
                 name="entry_type"
                 defaultValue=""
-                className="w-full rounded-xl border px-4 py-3 text-sm outline-none"
+                className={ui.input.select}
               >
                 <option value="">Selecione</option>
                 <option value="sale_received">Venda recebida</option>
@@ -92,7 +93,7 @@ export default async function RevisarManualPage({
                 id="description"
                 name="description"
                 type="text"
-                className="w-full rounded-xl border px-4 py-3 text-sm outline-none"
+                className={ui.input.text}
                 placeholder="Ex.: Serviço de instalação"
               />
             </div>
@@ -108,7 +109,7 @@ export default async function RevisarManualPage({
                 id="counterparty_name"
                 name="counterparty_name"
                 type="text"
-                className="w-full rounded-xl border px-4 py-3 text-sm outline-none"
+                className={ui.input.text}
                 placeholder="Ex.: João"
               />
             </div>
@@ -124,7 +125,7 @@ export default async function RevisarManualPage({
                 id="amount"
                 name="amount"
                 type="text"
-                className="w-full rounded-xl border px-4 py-3 text-sm outline-none"
+                className={ui.input.text}
                 placeholder="Ex.: 250.00"
               />
             </div>
@@ -142,7 +143,7 @@ export default async function RevisarManualPage({
                   name="occurred_on"
                   type="date"
                   defaultValue={today}
-                  className="w-full rounded-xl border px-4 py-3 text-sm outline-none"
+                  className={ui.input.text}
                 />
               </div>
 
@@ -157,7 +158,7 @@ export default async function RevisarManualPage({
                   id="due_on"
                   name="due_on"
                   type="date"
-                  className="w-full rounded-xl border px-4 py-3 text-sm outline-none"
+                  className={ui.input.text}
                 />
               </div>
             </div>
@@ -167,7 +168,7 @@ export default async function RevisarManualPage({
                 type="submit"
                 name="intent"
                 value="confirm"
-                className="rounded-xl border px-4 py-3 text-sm font-medium"
+                className={ui.button.primary}
               >
                 Salvar e confirmar
               </button>
@@ -176,14 +177,14 @@ export default async function RevisarManualPage({
                 type="submit"
                 name="intent"
                 value="pending"
-                className="rounded-xl border px-4 py-3 text-sm font-medium"
+                className={ui.button.secondary}
               >
                 Salvar como pendente
               </button>
 
               <Link
                 href="/painel"
-                className="rounded-xl border px-4 py-3 text-sm font-medium"
+                className={ui.button.secondary}
               >
                 Cancelar
               </Link>

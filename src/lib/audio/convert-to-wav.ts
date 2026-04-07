@@ -4,22 +4,13 @@ import path from 'path'
 import os from 'os'
 import { spawn } from 'child_process'
 
-function getFfmpegPath() {
-  // Carrega em runtime, depois de externalizar o pacote no Next
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const ffmpegPath = require('ffmpeg-static')
-  return ffmpegPath as string | null
+async function getFfmpegPath() {
+  const { default: ffmpegPath } = await import('ffmpeg-static')
+  return ffmpegPath
 }
 
-function runFfmpeg(args: string[]) {
+function runFfmpeg(ffmpegPath: string, args: string[]) {
   return new Promise<void>((resolve, reject) => {
-    const ffmpegPath = getFfmpegPath()
-
-    if (!ffmpegPath) {
-      reject(new Error('FFmpeg não encontrado.'))
-      return
-    }
-
     const process = spawn(ffmpegPath, args, {
       stdio: ['ignore', 'ignore', 'pipe'],
     })
@@ -49,6 +40,12 @@ export async function convertAudioBufferToWav(
   inputBuffer: Buffer,
   inputExtension: string
 ) {
+  const ffmpegPath = await getFfmpegPath()
+
+  if (!ffmpegPath) {
+    throw new Error('FFmpeg não encontrado.')
+  }
+
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'prumo-audio-'))
 
   const inputPath = path.join(tempDir, `input.${inputExtension}`)
@@ -57,7 +54,7 @@ export async function convertAudioBufferToWav(
   try {
     await fs.writeFile(inputPath, inputBuffer)
 
-    await runFfmpeg([
+    await runFfmpeg(ffmpegPath, [
       '-y',
       '-i',
       inputPath,

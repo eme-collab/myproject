@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import AudioCaptureCard from '@/components/audio-capture-card'
+import InstallAppCard from '@/components/install-app-card'
+import NotificationPreferencesCard from '@/components/notification-preferences-card'
 import {
   compareOpenAccountsByUrgency,
   getEntryTypeLabel,
@@ -144,15 +146,13 @@ export default async function PainelPage({
         <div className={ui.card.base}>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className={ui.text.pageTitle}>Painel</h1>
-              <p className={`mt-2 ${ui.text.muted}`}>
-                Usuário autenticado: {user.email}
-              </p>
+              <h1 className={ui.text.pageTitle}>Registre por voz as vendas e despesas do seu negócio!</h1>
+              <p className={`mt-3 ${ui.text.subtle}`}>Conectado como: {user.email}</p>
             </div>
 
             <div className="flex flex-wrap gap-3">
               <Link href="/resumo" className={ui.button.secondary}>
-                Ver resumo
+                Ver relatórios
               </Link>
 
               <form action={signOut}>
@@ -172,21 +172,21 @@ export default async function PainelPage({
 
         <AudioCaptureCard />
 
-        <div className={ui.card.base}>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className={ui.text.sectionTitle}>Lançamento manual</h2>
-              <p className={`mt-1 ${ui.text.muted}`}>
-                Use esta opção para preencher um lançamento diretamente, sem
-                áudio.
-              </p>
-            </div>
-
-            <Link href="/revisar/manual" className={ui.button.secondary}>
-              Novo lançamento manual
-            </Link>
+        <Link
+          href="/revisar/manual"
+          className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-900 shadow-sm transition hover:bg-neutral-50 active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-base">✍️</span>
+            <span>Fazer lançamento manual</span>
           </div>
-        </div>
+
+          <span className="text-neutral-400">›</span>
+        </Link>
+
+        <InstallAppCard />
+
+        <NotificationPreferencesCard />
 
         <details className={ui.card.base}>
           <summary className="cursor-pointer list-none">

@@ -6,6 +6,14 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ui } from '@/lib/ui'
 
+const ROTATING_HINTS = [
+  'Exemplo: Recebi 250 reais do cliente João hoje.',
+  'Exemplo: Vendi 300 reais para Maria e ela vai pagar em 15 dias.',
+  'Exemplo: Paguei 110 reais e 20 centavos de internet hoje.',
+  'Exemplo: Tenho uma conta de energia de 420 reais para pagar no dia 10.',
+  'Exemplo: Comprei 36 reais e 80 centavos na quitanda pra pagar dia 5 do mês que vem.',
+]
+
 function pickSupportedMimeType() {
   const candidates = [
     'audio/ogg',
@@ -49,6 +57,7 @@ export default function AudioCaptureCard() {
   const chunksRef = useRef<BlobPart[]>([])
   const recordingStartedAtRef = useRef<number | null>(null)
   const recordingIntervalRef = useRef<number | null>(null)
+  const rotatingHintIntervalRef = useRef<number | null>(null)
 
   const [isRecording, setIsRecording] = useState(false)
   const [isSubmittingCapture, setIsSubmittingCapture] = useState(false)
@@ -56,6 +65,7 @@ export default function AudioCaptureCard() {
   const [error, setError] = useState<string | null>(null)
   const [queueMessage, setQueueMessage] = useState<string | null>(null)
   const [lastEntryId, setLastEntryId] = useState<string | null>(null)
+  const [rotatingHintIndex, setRotatingHintIndex] = useState(0)
 
   function stopCurrentStream() {
     if (streamRef.current) {
@@ -88,44 +98,56 @@ export default function AudioCaptureCard() {
     }, 1000)
   }
 
+  function stopRotatingHints() {
+    if (rotatingHintIntervalRef.current !== null) {
+      window.clearInterval(rotatingHintIntervalRef.current)
+      rotatingHintIntervalRef.current = null
+    }
+  }
+
   useEffect(() => {
+    rotatingHintIntervalRef.current = window.setInterval(() => {
+      setRotatingHintIndex((current) => (current + 1) % ROTATING_HINTS.length)
+    }, 3500)
+
     return () => {
       stopCurrentStream()
       stopRecordingTimer()
+      stopRotatingHints()
     }
   }, [])
 
   async function runBackgroundProcessing(entryId: string) {
-  try {
-    const processResponse = await fetch(`/api/process-entry/${entryId}`, {
-      method: 'POST',
-    })
+    try {
+      const processResponse = await fetch(`/api/process-entry/${entryId}`, {
+        method: 'POST',
+      })
 
-    const processRaw = await processResponse.text()
-    let processPayload: { error?: string } = {}
+      const processRaw = await processResponse.text()
+      let processPayload: { error?: string } = {}
 
-    if (processRaw) {
-      try {
-        processPayload = JSON.parse(processRaw)
-      } catch {
+      if (processRaw) {
+        try {
+          processPayload = JSON.parse(processRaw)
+        } catch {
+          throw new Error(
+            `Falha ao ler a resposta do processamento. Status ${processResponse.status}.`
+          )
+        }
+      }
+
+      if (!processResponse.ok) {
         throw new Error(
-          `Falha ao ler a resposta do processamento. Status ${processResponse.status}.`
+          processPayload.error || 'Falha ao processar o lançamento.'
         )
       }
-    }
 
-    if (!processResponse.ok) {
-      throw new Error(
-        processPayload.error || 'Falha ao processar o lançamento.'
-      )
+      router.refresh()
+    } catch (processingError) {
+      console.error('Erro no processamento em segundo plano:', processingError)
+      router.refresh()
     }
-
-    router.refresh()
-  } catch (processingError) {
-    console.error('Erro no processamento em segundo plano:', processingError)
-    router.refresh()
   }
-}
 
   async function queueAudioBlob(audioBlob: Blob) {
     try {
@@ -184,7 +206,7 @@ export default function AudioCaptureCard() {
 
       setLastEntryId(insertedEntry.id)
       setQueueMessage(
-        'Áudio enviado. Você já pode gravar o próximo. Revise depois em pendentes.'
+        'Áudio enviado com sucesso. Você já pode gravar o próximo ou revisar este lançamento agora.'
       )
 
       router.refresh()
@@ -297,11 +319,20 @@ export default function AudioCaptureCard() {
 
   return (
     <div className={ui.card.primary}>
-      <h2 className={ui.text.cardTitle}>Nova captura por voz</h2>
-      <p className={`mt-2 ${ui.text.muted}`}>
-        Toque no botão abaixo para gravar. Ao parar, o áudio é enviado
-        automaticamente e o processamento continua em paralelo.
-      </p>
+      <h2 className={ui.text.cardTitle}>Registrar movimentação financeira</h2>
+
+      <p className={`mt-2 ${ui.text.muted}`}>Fale uma venda, despesa, conta a pagar ou receber. Grave um áudio para cada lançamento.</p>
+
+      <div className="mt-4 overflow-hidden rounded-xl border border-sky-200 bg-white/80 px-4 py-3">
+        <div className="min-h-[44px]">
+          <p
+            key={rotatingHintIndex}
+            className="text-sm text-sky-800 transition-opacity duration-300"
+          >
+            {ROTATING_HINTS[rotatingHintIndex]}
+          </p>
+        </div>
+      </div>
 
       <div className="mt-6">
         <button
@@ -324,7 +355,7 @@ export default function AudioCaptureCard() {
           )}
 
           {!isRecording && !isSubmittingCapture && (
-            <span className="inline-flex h-3 w-3 rounded-full border" />
+            <span className="inline-flex h-3 w-3 rounded-full border border-white/80" />
           )}
 
           {isSubmittingCapture && (
@@ -334,18 +365,18 @@ export default function AudioCaptureCard() {
           <span>{getMainButtonLabel()}</span>
 
           {isRecording && (
-            <span className="rounded-full border px-2 py-1 text-sm font-medium">
+            <span className="rounded-full border border-white/30 px-2 py-1 text-sm font-medium">
               {formatRecordingTime(recordingSeconds)}
             </span>
           )}
         </button>
 
-        <p className="mt-3 text-sm text-neutral-600">
+        <p className="mt-3 text-sm text-sky-900/80">
           {isSubmittingCapture
             ? 'O áudio está sendo enviado. Assim que terminar, você poderá gravar o próximo.'
             : isRecording
               ? 'Gravação em andamento. Toque no botão novamente para finalizar.'
-              : 'Toque no botão para iniciar uma nova gravação por voz.'}
+              : 'Toque no botão para registrar uma nova movimentação financeira por voz.'}
         </p>
       </div>
 
@@ -354,18 +385,9 @@ export default function AudioCaptureCard() {
           <p className="text-sm font-medium">{queueMessage}</p>
 
           <div className="mt-3 flex flex-wrap gap-3">
-            <Link
-              href="/painel"
-              className="rounded-lg border px-3 py-2 text-xs font-medium"
-            >
-              Atualizar painel
-            </Link>
-
+            
             {lastEntryId && (
-              <Link
-                href={`/revisar/${lastEntryId}`}
-                className="rounded-lg border px-3 py-2 text-xs font-medium"
-              >
+              <Link href={`/revisar/${lastEntryId}`} className={ui.button.secondary}>
                 Revisar agora
               </Link>
             )}

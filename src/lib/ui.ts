@@ -1,8 +1,11 @@
 export const ui = {
   page: {
-    shell: 'min-h-screen bg-neutral-50 p-4 md:p-8',
+    shell:
+      'min-h-[100dvh] bg-neutral-50 px-4 pb-[calc(1rem+var(--safe-area-bottom))] pt-[calc(1rem+var(--safe-area-top))] md:p-8',
     container: 'mx-auto max-w-5xl space-y-4',
     containerNarrow: 'mx-auto max-w-3xl space-y-6',
+    authShell:
+      'min-h-[100dvh] bg-neutral-50 px-4 pb-[calc(1rem+var(--safe-area-bottom))] pt-[calc(1rem+var(--safe-area-top))] md:p-8',
   },
 
   card: {
