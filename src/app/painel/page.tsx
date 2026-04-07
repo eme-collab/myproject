@@ -2,12 +2,10 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import AudioCaptureCard from '@/components/audio-capture-card'
 import InstallAppCard from '@/components/install-app-card'
-import NotificationPreferencesCard from '@/components/notification-preferences-card'
 import {
   compareOpenAccountsByUrgency,
   getEntryTypeLabel,
   getOpenAccountUrgencyMeta,
-  getSettlementStatusLabel,
   getUrgencyBadgeClass,
 } from '@/lib/financial-entry-labels'
 import { formatCurrency } from '@/lib/month-period'
@@ -76,15 +74,6 @@ export default async function PainelPage({
     .order('created_at', { ascending: false })
     .limit(20)
 
-  const { data: confirmed, error: confirmedError } = await supabase
-    .from('financial_entries')
-    .select(
-      'id, description, entry_type, amount, occurred_on, created_at, settlement_status'
-    )
-    .eq('review_status', 'confirmed')
-    .order('created_at', { ascending: false })
-    .limit(10)
-
   const { data: openReceivables, error: openReceivablesError } = await supabase
     .from('financial_entries')
     .select(
@@ -108,7 +97,6 @@ export default async function PainelPage({
     .limit(20)
 
   const pendingCount = pending?.length ?? 0
-  const confirmedCount = confirmed?.length ?? 0
 
   const processingEntries =
     pending?.filter((entry) =>
@@ -185,8 +173,6 @@ export default async function PainelPage({
         </Link>
 
         <InstallAppCard />
-
-        <NotificationPreferencesCard />
 
         <details className={ui.card.base}>
           <summary className="cursor-pointer list-none">
@@ -472,64 +458,6 @@ export default async function PainelPage({
                   })}
                 </ul>
               </div>
-            )}
-          </div>
-        </details>
-
-        <details className={ui.card.base}>
-          <summary className="cursor-pointer list-none">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className={ui.text.sectionTitle}>
-                  Lançamentos confirmados
-                </h2>
-                <p className={`mt-1 ${ui.text.muted}`}>
-                  Últimos lançamentos já confirmados.
-                </p>
-              </div>
-
-              <span className={ui.badge.neutral}>{confirmedCount}</span>
-            </div>
-          </summary>
-
-          <div className="mt-6">
-            {confirmedError && (
-              <p className="text-sm text-red-600">
-                Erro ao carregar confirmados: {confirmedError.message}
-              </p>
-            )}
-
-            {!confirmedError && (!confirmed || confirmed.length === 0) && (
-              <p className={ui.text.muted}>
-                Nenhum lançamento confirmado ainda.
-              </p>
-            )}
-
-            {!confirmedError && confirmed && confirmed.length > 0 && (
-              <ul className="space-y-3">
-                {confirmed.map((entry) => (
-                  <li key={entry.id} className={ui.card.muted}>
-                    <p className={ui.text.strong}>
-                      {entry.description ?? 'Sem descrição'}
-                    </p>
-                    <p className={`mt-1 ${ui.text.subtle}`}>
-                      Tipo: {getEntryTypeLabel(entry.entry_type)} | Valor:{' '}
-                      {entry.amount !== null
-                        ? formatCurrency(entry.amount)
-                        : '-'}
-                    </p>
-                    <p className={`mt-1 ${ui.text.subtle}`}>
-                      Data: {entry.occurred_on ?? '-'}
-                    </p>
-                    {entry.settlement_status && (
-                      <p className={`mt-1 ${ui.text.subtle}`}>
-                        Situação:{' '}
-                        {getSettlementStatusLabel(entry.settlement_status)}
-                      </p>
-                    )}
-                  </li>
-                ))}
-              </ul>
             )}
           </div>
         </details>

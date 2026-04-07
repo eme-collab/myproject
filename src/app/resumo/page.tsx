@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import NotificationPreferencesCard from '@/components/notification-preferences-card'
 import { formatCurrency, getMonthPeriod } from '@/lib/month-period'
 import { createClient } from '@/lib/supabase/server'
 import { ui } from '@/lib/ui'
@@ -46,6 +47,10 @@ function sumSettledAmounts(
   return entries.reduce((total, entry) => {
     return total + (entry.settled_amount ?? entry.amount ?? 0)
   }, 0)
+}
+
+function getSectionCount(entries: Array<unknown>) {
+  return entries.length
 }
 
 export default async function ResumoPage({
@@ -272,8 +277,21 @@ export default async function ResumoPage({
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <div className={ui.card.base}>
-            <h2 className={ui.text.sectionTitle}>Recebimentos do mês</h2>
+          <details className={ui.card.base}>
+            <summary className="cursor-pointer list-none">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className={ui.text.sectionTitle}>Recebimentos do mês</h2>
+                  <p className={`mt-1 ${ui.text.muted}`}>
+                    Entradas confirmadas e liquidações recebidas no período.
+                  </p>
+                </div>
+
+                <span className={ui.badge.primary}>
+                  {getSectionCount(receivedEntries)}
+                </span>
+              </div>
+            </summary>
 
             {receivedEntries.length === 0 ? (
               <p className={`mt-4 ${ui.text.muted}`}>
@@ -297,10 +315,23 @@ export default async function ResumoPage({
                 ))}
               </ul>
             )}
-          </div>
+          </details>
 
-          <div className={ui.card.base}>
-            <h2 className={ui.text.sectionTitle}>Pagamentos do mês</h2>
+          <details className={ui.card.base}>
+            <summary className="cursor-pointer list-none">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className={ui.text.sectionTitle}>Pagamentos do mês</h2>
+                  <p className={`mt-1 ${ui.text.muted}`}>
+                    Saídas confirmadas e liquidações pagas no período.
+                  </p>
+                </div>
+
+                <span className={ui.badge.neutral}>
+                  {getSectionCount(paidEntries)}
+                </span>
+              </div>
+            </summary>
 
             {paidEntries.length === 0 ? (
               <p className={`mt-4 ${ui.text.muted}`}>
@@ -324,10 +355,25 @@ export default async function ResumoPage({
                 ))}
               </ul>
             )}
-          </div>
+          </details>
 
-          <div className={ui.card.base}>
-            <h2 className={ui.text.sectionTitle}>Contas a receber em aberto</h2>
+          <details className={ui.card.base}>
+            <summary className="cursor-pointer list-none">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className={ui.text.sectionTitle}>
+                    Contas a receber em aberto
+                  </h2>
+                  <p className={`mt-1 ${ui.text.muted}`}>
+                    Valores ainda não liquidados com vencimento no mês.
+                  </p>
+                </div>
+
+                <span className={ui.badge.primary}>
+                  {getSectionCount(receivableOpenEntries)}
+                </span>
+              </div>
+            </summary>
 
             {receivableOpenEntries.length === 0 ? (
               <p className={`mt-4 ${ui.text.muted}`}>
@@ -353,10 +399,25 @@ export default async function ResumoPage({
                 ))}
               </ul>
             )}
-          </div>
+          </details>
 
-          <div className={ui.card.base}>
-            <h2 className={ui.text.sectionTitle}>Contas a pagar em aberto</h2>
+          <details className={ui.card.base}>
+            <summary className="cursor-pointer list-none">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className={ui.text.sectionTitle}>
+                    Contas a pagar em aberto
+                  </h2>
+                  <p className={`mt-1 ${ui.text.muted}`}>
+                    Contas ainda não liquidadas com vencimento no mês.
+                  </p>
+                </div>
+
+                <span className={ui.badge.warning}>
+                  {getSectionCount(payableOpenEntries)}
+                </span>
+              </div>
+            </summary>
 
             {payableOpenEntries.length === 0 ? (
               <p className={`mt-4 ${ui.text.muted}`}>
@@ -382,7 +443,11 @@ export default async function ResumoPage({
                 ))}
               </ul>
             )}
-          </div>
+          </details>
+        </div>
+
+        <div className="pt-2">
+          <NotificationPreferencesCard />
         </div>
       </div>
     </main>
